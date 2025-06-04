@@ -14,82 +14,117 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int count = 10;
-  Color red = Colors.red;
-  Color green = Colors.green;
-  Color temp = Colors.white;
-
-  AudioCache au = AudioCache();
   AudioPlayer ap = AudioPlayer();
-
-
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(backgroundColor: green,title: MaterialButton(onPressed: (){}, child: Container(
-          color: Colors.deepPurple,
-          child: Image.network(
-            "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-            width: 100,
-            height: 100,
+        appBar: AppBar(
+          title: MaterialButton(onPressed: () {}, child: Text("Ttile")),
+        ),
+        body: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            // number of items per row
+            crossAxisCount: 4,
+            // vertical spacing between the items
+            mainAxisSpacing: 10,
+            // horizontal spacing between the items
+            crossAxisSpacing: 10,
           ),
-        ),),),
-        body: Container(
-          color: red,
-          child: SingleChildScrollView(
-
-            child: Column(
-
-              children: [
-                Text("${count}"),
-                MaterialButton(
-                  onPressed: () {
-                    setState(() {
-                      this.count = 50;
-
-                      ap.play(AssetSource("music/Kick.wav"));
-
-
-                    });
-                  },
-                  child: Container(
-                    color: Colors.deepPurple,
-                    child: Image.network(
-                      "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-                      width: 100,
-                      height: 100,
-                    ),
+          // number of items in your list
+          itemCount: 28,
+          itemBuilder: (BuildContext context, int index) {
+            if (index % 2 == 0) {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [Color(0xffADCBFC), Color(0xff067CCB)],
+                    center: Alignment.center,
+                    radius: 0.35,
+                    // Increase for a wider red area
+                    stops: [0.0, 1.0],
+                    tileMode: TileMode.clamp,
                   ),
                 ),
-                MaterialButton(
+                child: MaterialButton(
                   onPressed: () {
-                    setState(() {
-                      //this.count = 90;
-                      this.count++;
-                      temp = green;
-                      green = red;
-                      red = temp;
-                    });
+                    print("${index}");
                   },
-                  child: Container(
-                    color: Colors.red,
-                    child: Image.network(
-                      "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-                      width: 100,
-                      height: 100,
-                    ),
+                  child: Text("Change"),
+                ),
+              );
+            }
+            // else if (index % 3 == 0) {
+            //   return Container(
+            //     decoration: BoxDecoration(
+            //       gradient: RadialGradient(
+            //         colors: [Color(0xffff2525), Color(0xffc40050)],
+            //         center: Alignment.center,
+            //         radius: 0.35,
+            //         // Increase for a wider red area
+            //         stops: [0.0, 1.0],
+            //         tileMode: TileMode.clamp,
+            //       ),
+            //     ),
+            //     child: MaterialButton(
+            //       onPressed: () {
+            //         print("${index}");
+            //       },
+            //       child: Text("Change"),
+            //     ),
+            //   );
+            // }
+            // else if (index % 2 == 0) {
+            //   return Container(
+            //     decoration: BoxDecoration(
+            //       gradient: RadialGradient(
+            //         colors: [Color(0xffADCBFC), Color(0xff067CCB)],
+            //         center: Alignment.center,
+            //         radius: 0.35,
+            //         // Increase for a wider red area
+            //         stops: [0.0, 1.0],
+            //         tileMode: TileMode.clamp,
+            //       ),
+            //     ),
+            //     child: MaterialButton(
+            //       onPressed: () {
+            //         print("${index}");
+            //       },
+            //       child: Text("Change"),
+            //     ),
+            //   );
+            // }
+            else {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [Colors.red, Colors.green],
+                    center: Alignment.center,
+                    radius: 0.35,
+                    // Increase for a wider red area
+                    stops: [0.0, 1.0],
+                    tileMode: TileMode.clamp,
                   ),
                 ),
-              ],
-            ),
-          ),
+                child: MaterialButton(
+                  onPressed: () {
+                    print("${index}");
+                  },
+                  child: Text("Change"),
+                ),
+              );
+            }
+          },
         ),
       ),
     );
   }
 }
+
+// 0xffADCBFC (center) 0xff067CCB (outline)
+// 0xffff2525          0xffc40050
+// 0xffE247FC          0xffA23AB7
 
 // class MyApp extends StatelessWidget {
 //   const MyApp({super.key});
