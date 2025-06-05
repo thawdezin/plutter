@@ -16,90 +16,96 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   AudioPlayer ap = AudioPlayer();
 
+  var blueC = [Color(0xffADCBFC), Color(0xff067CCB)];
+  var pinkC = [Color(0xffE247FC), Color(0xffA23AB7)];
+  var redC = [Color(0xffff2525), Color(0xffc40050)];
+
+  var blueCO = [
+    Color(0xffADCBFC).withOpacity(0.5),
+    Color(0xff067CCB).withOpacity(0.5),
+  ];
+  var pinkCO = [
+    Color(0xffE247FC).withOpacity(0.5),
+    Color(0xffA23AB7).withOpacity(0.5),
+  ];
+  var redCO = [
+    Color(0xffff2525).withOpacity(0.5),
+    Color(0xffc40050).withOpacity(0.5),
+  ];
+
+  // var tempC = [Color(0xffADCBFC), Color(0xff067CCB)];
+  //
+  // var blueBackup = [Color(0xffADCBFC), Color(0xff067CCB)];
+  // var pinkBackup = [Color(0xffE247FC), Color(0xffA23AB7)];
+  // var redBackup = [Color(0xffff2525), Color(0xffc40050)];
+
+  List<List<Color>> itemColors = [];
+
   @override
   Widget build(BuildContext context) {
+    for (int i = 0; i < 28; i++) {
+      itemColors.add(blueC);
+    }
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: MaterialButton(onPressed: () {}, child: Text("Ttile")),
+          title: MaterialButton(onPressed: () {}, child: Text("")),
         ),
         body: GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            // number of items per row
             crossAxisCount: 4,
-            // vertical spacing between the items
+
             mainAxisSpacing: 10,
-            // horizontal spacing between the items
+
             crossAxisSpacing: 10,
           ),
-          // number of items in your list
+
           itemCount: 28,
           itemBuilder: (BuildContext context, int index) {
+            print(index);
             if (index % 2 == 0) {
+              itemColors[index] = blueC;
+              var tempHolder = itemColors[index];
               return Container(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
-                    colors: [Color(0xffADCBFC), Color(0xff067CCB)],
+                    colors: tempHolder,
                     center: Alignment.center,
                     radius: 0.35,
                     // Increase for a wider red area
                     stops: [0.0, 1.0],
                     tileMode: TileMode.clamp,
                   ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: MaterialButton(
                   onPressed: () {
-                    print("${index}");
+                    print(index);
+                    //ap.play(AssetSource("music/${++index}.mp3"));
+                    ap.play(AssetSource("${++index}.mp3"));
+                    print("$index");
+                    setState(() {
+                      tempHolder = blueCO;
+                      print("click");
+                      Future.delayed(const Duration(milliseconds: 400), () {
+                        setState(() {
+                          tempHolder = itemColors[index];
+                          print("done");
+                        });
+                      });
+                    });
                   },
-                  child: Text("Change"),
+                  child: Text(""),
                 ),
               );
-            }
-            // else if (index % 3 == 0) {
-            //   return Container(
-            //     decoration: BoxDecoration(
-            //       gradient: RadialGradient(
-            //         colors: [Color(0xffff2525), Color(0xffc40050)],
-            //         center: Alignment.center,
-            //         radius: 0.35,
-            //         // Increase for a wider red area
-            //         stops: [0.0, 1.0],
-            //         tileMode: TileMode.clamp,
-            //       ),
-            //     ),
-            //     child: MaterialButton(
-            //       onPressed: () {
-            //         print("${index}");
-            //       },
-            //       child: Text("Change"),
-            //     ),
-            //   );
-            // }
-            // else if (index % 2 == 0) {
-            //   return Container(
-            //     decoration: BoxDecoration(
-            //       gradient: RadialGradient(
-            //         colors: [Color(0xffADCBFC), Color(0xff067CCB)],
-            //         center: Alignment.center,
-            //         radius: 0.35,
-            //         // Increase for a wider red area
-            //         stops: [0.0, 1.0],
-            //         tileMode: TileMode.clamp,
-            //       ),
-            //     ),
-            //     child: MaterialButton(
-            //       onPressed: () {
-            //         print("${index}");
-            //       },
-            //       child: Text("Change"),
-            //     ),
-            //   );
-            // }
-            else {
+            } else if (++index % 4 == 0) {
+              itemColors[index] = pinkC;
+              var tempHolder = itemColors[index];
               return Container(
                 decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
                   gradient: RadialGradient(
-                    colors: [Colors.red, Colors.green],
+                    colors: tempHolder,
                     center: Alignment.center,
                     radius: 0.35,
                     // Increase for a wider red area
@@ -109,9 +115,57 @@ class _MyAppState extends State<MyApp> {
                 ),
                 child: MaterialButton(
                   onPressed: () {
-                    print("${index}");
+                    print(index);
+                    //ap.play(AssetSource("music/${++index}.mp3"));
+                    ap.play(AssetSource("${++index}.mp3"));
+                    print("$index");
+                    setState(() {
+                      tempHolder = pinkCO;
+                      print("click");
+                      Future.delayed(const Duration(milliseconds: 400), () {
+                        setState(() {
+                          tempHolder = itemColors[index];
+                          print("done");
+                        });
+                      });
+                    });
                   },
-                  child: Text("Change"),
+                  child: Text(""),
+                ),
+              );
+            } else {
+              itemColors[index] = redC;
+              var tempHolder = itemColors[index];
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: RadialGradient(
+                    colors: tempHolder,
+                    center: Alignment.center,
+                    radius: 0.35,
+                    // Increase for a wider red area
+                    stops: [0.0, 1.0],
+                    tileMode: TileMode.clamp,
+                  ),
+                ),
+                child: MaterialButton(
+                  onPressed: () {
+                    print("$index");
+                    setState(() {
+                      print(index);
+                      //ap.play(AssetSource("music/${++index}.mp3"));
+                      ap.play(AssetSource("${++index}.mp3"));
+                      tempHolder = redCO;
+                      print("click");
+                      Future.delayed(const Duration(milliseconds: 400), () {
+                        setState(() {
+                          tempHolder = itemColors[index];
+                          print("done");
+                        });
+                      });
+                    });
+                  },
+                  child: Text(""),
                 ),
               );
             }
@@ -121,96 +175,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-// 0xffADCBFC (center) 0xff067CCB (outline)
-// 0xffff2525          0xffc40050
-// 0xffE247FC          0xffA23AB7
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       home: Scaffold(
-//         appBar: AppBar(
-//           title: Center(
-//             child: Text(
-//               "My network image",
-//               style: TextStyle(color: Colors.black, fontSize: 30),
-//             ),
-//           ),
-//           elevation: 0.0,
-//         ),
-//         body: SingleChildScrollView(
-//           scrollDirection: Axis.horizontal,
-//           child: Stack(
-//             alignment: Alignment.bottomRight,
-//             children: [
-//               Container(
-//                 color: Colors.red,
-//                 child: Image.network(
-//                   "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-//                   width: 200,
-//                   height: 200,
-//                 ),
-//               ),
-//               Positioned(
-//                 right: 10,
-//                 left: 10,
-//                 child: Container(
-//                   color: Colors.green,
-//                   child: Image.network(
-//                     "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-//                     width: 100,
-//                     height: 100,
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// Scaffold(
-// appBar: AppBar(
-// title: Center(
-// child: Text(
-// "My network image",
-// style: TextStyle(color: Colors.black, fontSize: 30),
-// ),
-// ),
-// elevation: 0.0,
-// ),
-// body: SingleChildScrollView(
-// scrollDirection: Axis.horizontal,
-// child: Stack(
-// alignment: Alignment.bottomRight,
-// children: [
-// Container(
-// color: Colors.red,
-// child: Image.network(
-// "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-// width: 200,
-// height: 200,
-// ),
-// ),
-// Positioned(
-// right: 10,
-// left: 10,
-// child: Container(
-// color: Colors.green,
-// child: Image.network(
-// "https://t4.ftcdn.net/jpg/01/05/90/77/240_F_105907729_4RzHYsHJ2UFt5koUI19fc6VzyFPEjeXe.jpg",
-// width: 100,
-// height: 100,
-// ),
-// ),
-// ),
-// ],
-// ),
-// ),
-// )
