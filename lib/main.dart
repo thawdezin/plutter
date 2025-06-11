@@ -134,7 +134,7 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
     // Define the desired width and height of the draggable pill
     const double pillWidthFactor = 1.2; // Make pill 20% wider for more prominence
     final double pillWidth = itemWidth * pillWidthFactor;
-    const double pillHeight = 90.0; // Increased height, greater than the nav bar's 70.0 height
+    const double pillHeight = 70.0; // Increased height, greater than the nav bar's 70.0 height
 
     // Calculate the top position to center the taller pill vertically within the 70.0 high bar
     // This value is negative because the pill starts ABOVE the main container's top edge
@@ -183,7 +183,7 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
             _currentDragOffset = 0.0;
           });
         },
-        child: Container( // Removed ClipRRect and BackdropFilter from here
+        child: Container(
           // The total height of this container determines the effective height of the Stack
           // It needs to be tall enough to contain the overflowing pill
           height: pillHeight, // Now the container height is set to pill height
@@ -250,20 +250,23 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
                       borderRadius: BorderRadius.circular(25.0),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        // Changed Column to Row for horizontal layout of icon and text
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
+                          // Removed mainAxisSize.min to allow Expanded text to fill space
                           children: [
                             Icon(currentPillItemData['icon'], color: Colors.white, size: 28),
                             const SizedBox(width: 8),
-                            Text(
-                              currentPillItemData['label'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            Expanded( // Use Expanded to ensure text wraps/ellipses within available space
+                              child: Text(
+                                currentPillItemData['label'],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis, // Truncate long text
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
