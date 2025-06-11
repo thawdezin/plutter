@@ -167,16 +167,19 @@ class GlassmorphicBottomNavBar extends StatelessWidget {
                   child: Row(
                     // Icon and text arranged side-by-side when selected
                     mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min, // Make the Row take minimum horizontal space
+                    // Removed mainAxisSize: MainAxisSize.min to allow Expanded to work
                     children: [
                       Icon(icon, color: Colors.white, size: 24), // White icon
                       const SizedBox(width: 8), // Space between icon and text
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white, // White text
-                          fontSize: 14, // Slightly larger font for selected text
-                          fontWeight: FontWeight.bold, // Bold text
+                      Expanded( // Added Expanded to text to prevent overflow
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white, // White text
+                            fontSize: 14, // Slightly larger font for selected text
+                            fontWeight: FontWeight.bold, // Bold text
+                          ),
+                          overflow: TextOverflow.ellipsis, // Truncate long text with ellipsis
                         ),
                       ),
                     ],
