@@ -131,20 +131,25 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
     final double innerNavBarWidth = screenWidth - (16.0 * 2); // 16.0 padding on each side
     final double itemWidth = innerNavBarWidth / _navItemsData.length;
 
-    // Define the desired width of the draggable pill (e.g., 10% wider than a single item slot)
-    const double pillWidthFactor = 1.1; // Make pill 10% wider
+    // Define the desired width and height of the draggable pill
+    const double pillWidthFactor = 1.2; // Make pill 20% wider for more prominence
     final double pillWidth = itemWidth * pillWidthFactor;
+    const double pillHeight = 90.0; // Increased height, greater than the nav bar's 70.0 height
+
+    // Calculate the top position to center the taller pill vertically within the 70.0 high bar
+    // This value is negative because the pill starts ABOVE the main container's top edge
+    final double pillTopOffset = (70.0 - pillHeight) / 2;
 
     // Get the data for the currently selected item to display inside the pill
     final Map<String, dynamic> currentPillItemData = _navItemsData[widget.selectedIndex];
 
     return Padding(
       // Add padding to the navigation bar, pulling it away from the screen edges
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      // Increase bottom padding to ensure the overflowing pill doesn't get cut off by screen edge
+      padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 30.0), // Increased bottom padding
       child: GestureDetector(
         // GestureDetector on the entire navigation bar to capture horizontal drag events
         onHorizontalDragStart: (details) {
-          // Reset drag offset when a new drag starts to ensure smooth relative movement
           setState(() {
             _currentDragOffset = 0.0;
           });
@@ -153,125 +158,121 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
           setState(() {
             _currentDragOffset += details.primaryDelta!; // Accumulate drag delta
 
-            // Clamp the drag offset to prevent the pill from going beyond the navigation bar limits
-            // The clamping now considers the pill's increased width for accurate bounds.
             _currentDragOffset = _currentDragOffset.clamp(
-              // Max drag to the left: negative offset covering previous items, considering pill width
               -(widget.selectedIndex * itemWidth) + (pillWidth - itemWidth) / 2,
-              // Max drag to the right: positive offset covering remaining items, considering pill width
               ((_navItemsData.length - 1 - widget.selectedIndex) * itemWidth) - (pillWidth - itemWidth) / 2,
             );
           });
         },
         onHorizontalDragEnd: (details) {
-          // Calculate the target index based on the final drag offset and item width
-          // Use a snap threshold relative to the itemWidth for consistent snapping
           final double snapThreshold = itemWidth / 2;
           int newIndex = widget.selectedIndex;
 
           if (_currentDragOffset > snapThreshold) {
-            // Dragged significantly to the right (visually moving left relative to the bar)
             newIndex = (widget.selectedIndex - (_currentDragOffset / itemWidth).round());
           } else if (_currentDragOffset < -snapThreshold) {
-            // Dragged significantly to the left (visually moving right relative to the bar)
             newIndex = (widget.selectedIndex - (_currentDragOffset / itemWidth).round());
           }
 
-          // Clamp the new index to ensure it's within valid bounds
           newIndex = newIndex.clamp(0, _navItemsData.length - 1);
 
-          // If the index has changed, notify the parent and reset drag offset
           if (newIndex != widget.selectedIndex) {
             widget.onItemTapped(newIndex);
           }
-          // Always reset drag offset after drag ends, so AnimatedPositioned snaps to the final index
           setState(() {
             _currentDragOffset = 0.0;
           });
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30.0), // Apply rounded corners to the entire bar
-          child: BackdropFilter(
-            // Apply a significant blur to the background of the entire navigation bar
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              height: 70, // Fixed height for the navigation bar
-              decoration: BoxDecoration(
-                // Translucent background color for the bar
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(30.0),
-                // Subtle border to give it a more defined glass edge
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+        child: Container( // Removed ClipRRect and BackdropFilter from here
+          // The total height of this container determines the effective height of the Stack
+          // It needs to be tall enough to contain the overflowing pill
+          height: pillHeight, // Now the container height is set to pill height
+          child: Stack(
+            clipBehavior: Clip.none, // Allow children to go outside the stack's bounds
+            children: [
+              // --- Background of the Navigation Bar ---
+              Positioned.fill( // Fills the parent container
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30.0), // Rounded corners for the main bar
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // Blur for the main bar
+                    child: Container(
+                      height: 70, // Fixed height for the visible part of the navigation bar
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08), // Translucent background
+                        borderRadius: BorderRadius.circular(30.0),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              child: Stack(
-                children: [
-                  // Animated Draggable Indicator (The "pill")
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300), // Smooth animation for snapping
-                    curve: Curves.easeInOut,
-                    // Position the pill, accounting for its wider size to keep it centered
-                    left: _getIndicatorLeftPosition(innerNavBarWidth, _navItemsData.length, pillWidth),
-                    width: pillWidth, // Pill width is now explicitly wider
-                    height: 70, // Pill height is same as nav bar height
-                    child: Center(
-                      child: Container(
-                        // Reduced horizontal padding slightly to allow the pill to look wider
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E1E).withOpacity(0.7), // Darker, translucent background
-                          borderRadius: BorderRadius.circular(25.0), // Rounded corners for the pill
-                          boxShadow: [
-                            // Blue glow effect when selected, now more prominent
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.8), // Slightly stronger glow color
-                              blurRadius: 25, // Increased blur for a bigger glow
-                              spreadRadius: 5, // Increased spread for a bigger glow
-                              offset: const Offset(0, 0),
+
+              // --- Navigation Items (Static) ---
+              // These items sit on top of the background, acting as tap targets
+              Positioned.fill(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_navItemsData.length, (index) {
+                    return _buildNavItem(
+                      _navItemsData[index]['icon'],
+                      _navItemsData[index]['label'],
+                      index,
+                    );
+                  }),
+                ),
+              ),
+
+              // --- Animated Draggable Indicator (The "Pill") ---
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300), // Smooth animation for snapping
+                curve: Curves.easeInOut,
+                top: pillTopOffset, // Position vertically relative to the 70.0 height background
+                left: _getIndicatorLeftPosition(innerNavBarWidth, _navItemsData.length, pillWidth),
+                width: pillWidth, // Pill width is now explicitly wider
+                height: pillHeight, // Pill height is now explicitly taller
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E1E).withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(25.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.8),
+                          blurRadius: 30,
+                          spreadRadius: 6,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(25.0),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(currentPillItemData['icon'], color: Colors.white, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              currentPillItemData['label'],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(25.0),
-                          child: BackdropFilter(
-                            // Apply an inner blur to the selected item itself, creating the frosted glass look
-                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min, // Allows content to be snug
-                              children: [
-                                Icon(currentPillItemData['icon'], color: Colors.white, size: 24), // White icon
-                                const SizedBox(width: 8), // Space between icon and text
-                                Text(
-                                  currentPillItemData['label'],
-                                  style: const TextStyle(
-                                    color: Colors.white, // White text
-                                    fontSize: 14, // Slightly larger font for selected text
-                                    fontWeight: FontWeight.bold, // Bold text
-                                  ),
-                                  overflow: TextOverflow.ellipsis, // Truncate long text with ellipsis
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ),
                     ),
                   ),
-
-                  // Navigation Items (always visible and tappable)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(_navItemsData.length, (index) {
-                      return _buildNavItem(
-                        _navItemsData[index]['icon'],
-                        _navItemsData[index]['label'],
-                        index,
-                      );
-                    }),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -282,24 +283,20 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final bool isSelected = index == widget.selectedIndex;
     return Expanded(
-      // Allows each item to take equal available horizontal space
       child: GestureDetector(
-        onTap: () => widget.onItemTapped(index), // Handle tap to change selected index
+        onTap: () => widget.onItemTapped(index),
         child: Column(
-          // Centering the item content within its expanded space
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              // Faded white when selected, showing through the pill (watery effect)
-              color: Colors.white.withOpacity(isSelected ? 0.3 : 0.6),
+              color: Colors.white.withOpacity(isSelected ? 0.2 : 0.6),
               size: 24,
             ),
             Text(
               label,
-              // Faded white when selected, showing through the pill (watery effect)
               style: TextStyle(
-                color: Colors.white.withOpacity(isSelected ? 0.3 : 0.6),
+                color: Colors.white.withOpacity(isSelected ? 0.2 : 0.6),
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
