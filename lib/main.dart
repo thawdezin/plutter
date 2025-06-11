@@ -114,12 +114,14 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
   }
 
   // Helper method to calculate the left position of the draggable indicator
-  double _getIndicatorLeftPosition(double navBarWidth, int numItems) {
+  double _getIndicatorLeftPosition(double navBarWidth, int numItems, double pillWidth) {
     final double itemWidth = navBarWidth / numItems;
-    // Base position is the start of the currently selected item
+    // Base position is the start of the currently selected item's slot
     final double basePosition = widget.selectedIndex * itemWidth;
-    // Add the current drag offset to the base position
-    return basePosition + _currentDragOffset;
+    // Offset to center the wider pill within its designated slot
+    final double centeringOffset = (pillWidth - itemWidth) / 2;
+    // Add the current drag offset to the base position, adjusted for centering
+    return basePosition + _currentDragOffset - centeringOffset;
   }
 
   @override
@@ -128,6 +130,10 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
     // Calculate the width available for the inner row of items (excluding padding)
     final double innerNavBarWidth = screenWidth - (16.0 * 2); // 16.0 padding on each side
     final double itemWidth = innerNavBarWidth / _navItemsData.length;
+
+    // Define the desired width of the draggable pill (e.g., 10% wider than a single item slot)
+    const double pillWidthFactor = 1.1; // Make pill 10% wider
+    final double pillWidth = itemWidth * pillWidthFactor;
 
     // Get the data for the currently selected item to display inside the pill
     final Map<String, dynamic> currentPillItemData = _navItemsData[widget.selectedIndex];
@@ -148,24 +154,26 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
             _currentDragOffset += details.primaryDelta!; // Accumulate drag delta
 
             // Clamp the drag offset to prevent the pill from going beyond the navigation bar limits
+            // The clamping now considers the pill's increased width for accurate bounds.
             _currentDragOffset = _currentDragOffset.clamp(
-              // Max drag to the left: negative offset covering previous items
-              -widget.selectedIndex * itemWidth,
-              // Max drag to the right: positive offset covering remaining items
-              (_navItemsData.length - 1 - widget.selectedIndex) * itemWidth,
+              // Max drag to the left: negative offset covering previous items, considering pill width
+              -(widget.selectedIndex * itemWidth) + (pillWidth - itemWidth) / 2,
+              // Max drag to the right: positive offset covering remaining items, considering pill width
+              ((_navItemsData.length - 1 - widget.selectedIndex) * itemWidth) - (pillWidth - itemWidth) / 2,
             );
           });
         },
         onHorizontalDragEnd: (details) {
           // Calculate the target index based on the final drag offset and item width
-          final double snapThreshold = itemWidth / 2; // Snap if dragged past half an item
+          // Use a snap threshold relative to the itemWidth for consistent snapping
+          final double snapThreshold = itemWidth / 2;
           int newIndex = widget.selectedIndex;
 
           if (_currentDragOffset > snapThreshold) {
-            // Dragged significantly to the right (visually moving left)
+            // Dragged significantly to the right (visually moving left relative to the bar)
             newIndex = (widget.selectedIndex - (_currentDragOffset / itemWidth).round());
           } else if (_currentDragOffset < -snapThreshold) {
-            // Dragged significantly to the left (visually moving right)
+            // Dragged significantly to the left (visually moving right relative to the bar)
             newIndex = (widget.selectedIndex - (_currentDragOffset / itemWidth).round());
           }
 
@@ -201,21 +209,23 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 300), // Smooth animation for snapping
                     curve: Curves.easeInOut,
-                    left: _getIndicatorLeftPosition(innerNavBarWidth, _navItemsData.length),
-                    width: itemWidth, // Pill width is same as item width
+                    // Position the pill, accounting for its wider size to keep it centered
+                    left: _getIndicatorLeftPosition(innerNavBarWidth, _navItemsData.length, pillWidth),
+                    width: pillWidth, // Pill width is now explicitly wider
                     height: 70, // Pill height is same as nav bar height
                     child: Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        // Reduced horizontal padding slightly to allow the pill to look wider
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E1E1E).withOpacity(0.7), // Darker, translucent background
                           borderRadius: BorderRadius.circular(25.0), // Rounded corners for the pill
                           boxShadow: [
-                            // Blue glow effect when selected
+                            // Blue glow effect when selected, now more prominent
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.6),
-                              blurRadius: 20, // Stronger blur for a more prominent glow
-                              spreadRadius: 3,
+                              color: Colors.blue.withOpacity(0.8), // Slightly stronger glow color
+                              blurRadius: 25, // Increased blur for a bigger glow
+                              spreadRadius: 5, // Increased spread for a bigger glow
                               offset: const Offset(0, 0),
                             ),
                           ],
@@ -281,13 +291,15 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.6), // Transparent if selected (pill covers it)
+              // Faded white when selected, showing through the pill (watery effect)
+              color: Colors.white.withOpacity(isSelected ? 0.3 : 0.6),
               size: 24,
             ),
             Text(
               label,
+              // Faded white when selected, showing through the pill (watery effect)
               style: TextStyle(
-                color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.6), // Transparent if selected
+                color: Colors.white.withOpacity(isSelected ? 0.3 : 0.6),
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
