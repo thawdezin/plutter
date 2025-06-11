@@ -233,6 +233,7 @@ class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
                 height: pillHeight, // Pill height is now explicitly taller
                 child: Center(
                   child: Container(
+                    width: 90,
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1E1E1E).withOpacity(0.7),
