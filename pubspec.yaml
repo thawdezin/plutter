@@ -38,6 +38,8 @@ dependencies:
   #flutter_riverpod: ^2.6.1
   http: ^1.4.0
   audioplayers: ^6.4.0
+  #glassmorphism_ui: ^0.3.0
+  glass_kit: ^4.0.1
 
 
 
