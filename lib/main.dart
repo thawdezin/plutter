@@ -1,175 +1,122 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  AudioPlayer ap = AudioPlayer();
-
-  var blueC = [Color(0xffADCBFC), Color(0xff067CCB)];
-  var pinkC = [Color(0xffE247FC), Color(0xffA23AB7)];
-  var redC = [Color(0xffff2525), Color(0xffc40050)];
-
-  var blueCO = [
-    Color(0xffADCBFC).withOpacity(0.5),
-    Color(0xff067CCB).withOpacity(0.5),
-  ];
-  var pinkCO = [
-    Color(0xffE247FC).withOpacity(0.5),
-    Color(0xffA23AB7).withOpacity(0.5),
-  ];
-  var redCO = [
-    Color(0xffff2525).withOpacity(0.5),
-    Color(0xffc40050).withOpacity(0.5),
-  ];
-
-  // var tempC = [Color(0xffADCBFC), Color(0xff067CCB)];
-  //
-  // var blueBackup = [Color(0xffADCBFC), Color(0xff067CCB)];
-  // var pinkBackup = [Color(0xffE247FC), Color(0xffA23AB7)];
-  // var redBackup = [Color(0xffff2525), Color(0xffc40050)];
-
-  List<List<Color>> itemColors = [];
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    for (int i = 0; i < 28; i++) {
-      itemColors.add(blueC);
-    }
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: MaterialButton(onPressed: () {}, child: Text("")),
-        ),
-        body: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+      title: 'Glass Bottom Nav',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+      ),
+      home: const HomePage(),
+    );
+  }
+}
 
-            mainAxisSpacing: 10,
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
-            crossAxisSpacing: 10,
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    Center(child: Text('Calls', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Contacts', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Keypad', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Search', style: TextStyle(fontSize: 24))),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true, // for transparent bottom bar
+      body: _pages[_currentIndex],
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(4, (index) {
+                  IconData icon;
+                  String label;
+                  switch (index) {
+                    case 0:
+                      icon = Icons.access_time;
+                      label = 'Calls';
+                      break;
+                    case 1:
+                      icon = Icons.person;
+                      label = 'Contacts';
+                      break;
+                    case 2:
+                      icon = Icons.dialpad;
+                      label = 'Keypad';
+                      break;
+                    default:
+                      icon = Icons.search;
+                      label = 'Search';
+                  }
+                  final isSelected = index == _currentIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => _currentIndex = index),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 250),
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: isSelected
+                          ? BoxDecoration(
+                        color: Colors.blue.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(30),
+                      )
+                          : BoxDecoration(),
+                      child: Row(
+                        children: [
+                          Icon(icon,
+                              color: isSelected ? Colors.blue : Colors.white),
+                          if (isSelected)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
           ),
-
-          itemCount: 28,
-          itemBuilder: (BuildContext context, int index) {
-            print(index);
-            if (index % 2 == 0) {
-              itemColors[index] = blueC;
-              var tempHolder = itemColors[index];
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: tempHolder,
-                    center: Alignment.center,
-                    radius: 0.35,
-                    // Increase for a wider red area
-                    stops: [0.0, 1.0],
-                    tileMode: TileMode.clamp,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: MaterialButton(
-                  onPressed: () {
-                    print(index);
-                    //ap.play(AssetSource("music/${++index}.mp3"));
-                    ap.play(AssetSource("${++index}.mp3"));
-                    print("$index");
-                    setState(() {
-                      tempHolder = blueCO;
-                      print("click");
-                      Future.delayed(const Duration(milliseconds: 400), () {
-                        setState(() {
-                          tempHolder = itemColors[index];
-                          print("done");
-                        });
-                      });
-                    });
-                  },
-                  child: Text(""),
-                ),
-              );
-            } else if (++index % 4 == 0) {
-              itemColors[index] = pinkC;
-              var tempHolder = itemColors[index];
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: RadialGradient(
-                    colors: tempHolder,
-                    center: Alignment.center,
-                    radius: 0.35,
-                    // Increase for a wider red area
-                    stops: [0.0, 1.0],
-                    tileMode: TileMode.clamp,
-                  ),
-                ),
-                child: MaterialButton(
-                  onPressed: () {
-                    print(index);
-                    //ap.play(AssetSource("music/${++index}.mp3"));
-                    ap.play(AssetSource("${++index}.mp3"));
-                    print("$index");
-                    setState(() {
-                      tempHolder = pinkCO;
-                      print("click");
-                      Future.delayed(const Duration(milliseconds: 400), () {
-                        setState(() {
-                          tempHolder = itemColors[index];
-                          print("done");
-                        });
-                      });
-                    });
-                  },
-                  child: Text(""),
-                ),
-              );
-            } else {
-              itemColors[index] = redC;
-              var tempHolder = itemColors[index];
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: RadialGradient(
-                    colors: tempHolder,
-                    center: Alignment.center,
-                    radius: 0.35,
-                    // Increase for a wider red area
-                    stops: [0.0, 1.0],
-                    tileMode: TileMode.clamp,
-                  ),
-                ),
-                child: MaterialButton(
-                  onPressed: () {
-                    print("$index");
-                    setState(() {
-                      print(index);
-                      //ap.play(AssetSource("music/${++index}.mp3"));
-                      ap.play(AssetSource("${++index}.mp3"));
-                      tempHolder = redCO;
-                      print("click");
-                      Future.delayed(const Duration(milliseconds: 400), () {
-                        setState(() {
-                          tempHolder = itemColors[index];
-                          print("done");
-                        });
-                      });
-                    });
-                  },
-                  child: Text(""),
-                ),
-              );
-            }
-          },
         ),
       ),
     );
