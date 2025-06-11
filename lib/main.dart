@@ -1,4 +1,5 @@
-import 'dart:ui';
+import 'dart:ui'; // Required for ImageFilter and BackdropFilter
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -6,117 +7,199 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Glass Bottom Nav',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
+      title: 'iOS 26 Style Glassmorphism Navigation',
+      theme: ThemeData.dark().copyWith(
+        // Set scaffold background to black for a dark UI theme to better show transparency
+        scaffoldBackgroundColor: Colors.black,
+        // Customize AppBar theme for a clean, transparent look
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0, // No shadow for the app bar
+          centerTitle: true, // Center the app bar title
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        ),
       ),
-      home: const HomePage(),
+      home: const HomeScreen(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+class _HomeScreenState extends State<HomeScreen> {
+  // State variable to keep track of the currently selected navigation item
+  int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    Center(child: Text('Calls', style: TextStyle(fontSize: 24))),
-    Center(child: Text('Contacts', style: TextStyle(fontSize: 24))),
-    Center(child: Text('Keypad', style: TextStyle(fontSize: 24))),
-    Center(child: Text('Search', style: TextStyle(fontSize: 24))),
+  // List of placeholder pages to display in the body of the Scaffold
+  final List<Widget> _pages = <Widget>[
+    const Center(child: Text('Calls Page', style: TextStyle(fontSize: 24, color: Colors.white))),
+    const Center(child: Text('Contacts Page', style: TextStyle(fontSize: 24, color: Colors.white))),
+    const Center(child: Text('Keypad Page', style: TextStyle(fontSize: 24, color: Colors.white))),
+    const Center(child: Text('Search Page', style: TextStyle(fontSize: 24, color: Colors.white))),
   ];
+
+  // Callback function to update the selected index when a navigation item is tapped
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // for transparent bottom bar
-      body: _pages[_currentIndex],
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(4, (index) {
-                  IconData icon;
-                  String label;
-                  switch (index) {
-                    case 0:
-                      icon = Icons.access_time;
-                      label = 'Calls';
-                      break;
-                    case 1:
-                      icon = Icons.person;
-                      label = 'Contacts';
-                      break;
-                    case 2:
-                      icon = Icons.dialpad;
-                      label = 'Keypad';
-                      break;
-                    default:
-                      icon = Icons.search;
-                      label = 'Search';
-                  }
-                  final isSelected = index == _currentIndex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _currentIndex = index),
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 250),
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: isSelected
-                          ? BoxDecoration(
-                        color: Colors.blue.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(30),
-                      )
-                          : BoxDecoration(),
-                      child: Row(
-                        children: [
-                          Icon(icon,
-                              color: isSelected ? Colors.blue : Colors.white),
-                          if (isSelected)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
+      // extendBody property is crucial for glassmorphism effect.
+      // It allows the body content to extend underneath the bottom navigation bar,
+      // providing the necessary background for the BackdropFilter to blur.
+      extendBody: true,
+      appBar: AppBar(
+        title: const Text('iOS 26 Style Navigation'),
+      ),
+      // Display the selected page in the body
+      body: _pages[_selectedIndex],
+      // Custom glassmorphic bottom navigation bar
+      bottomNavigationBar: GlassmorphicBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class GlassmorphicBottomNavBar extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onItemTapped;
+
+  const GlassmorphicBottomNavBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // Add padding to the navigation bar, pulling it away from the screen edges
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30.0), // Apply rounded corners to the entire bar
+        child: BackdropFilter(
+          // Apply a significant blur to the background of the entire navigation bar
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            height: 70, // Fixed height for the navigation bar
+            decoration: BoxDecoration(
+              // Translucent background color for the bar
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(30.0),
+              // Subtle border to give it a more defined glass edge
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround, // Distribute items evenly
+              children: [
+                // Build individual navigation items
+                _buildNavItem(Icons.watch_later_outlined, 'Calls', 0),
+                _buildNavItem(Icons.person_outline, 'Contacts', 1),
+                _buildNavItem(Icons.apps_outlined, 'Keypad', 2), // Changed icon for better representation
+                _buildNavItem(Icons.search, 'Search', 3),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build each individual navigation item
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final bool isSelected = index == selectedIndex;
+    return Expanded(
+      // Allows each item to take equal available horizontal space
+      child: GestureDetector(
+        onTap: () => onItemTapped(index), // Handle tap to change selected index
+        child: Column(
+          // Centering the item content within its expanded space
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300), // Smooth animation duration
+              curve: Curves.easeInOut, // Animation curve for a natural feel
+              // Adjust padding based on selection to make the pill larger when active
+              padding: EdgeInsets.symmetric(
+                horizontal: isSelected ? 16.0 : 8.0,
+                vertical: 8.0,
+              ),
+              decoration: BoxDecoration(
+                // Background color for the pill, more opaque when selected
+                color: isSelected
+                    ? const Color(0xFF1E1E1E).withOpacity(0.7) // Darker, translucent when selected
+                    : Colors.transparent, // Transparent when not selected
+                borderRadius: BorderRadius.circular(25.0), // Rounded corners for the pill
+                boxShadow: isSelected
+                    ? [
+                  // Blue glow effect when selected
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.6),
+                    blurRadius: 20, // Stronger blur for a more prominent glow
+                    spreadRadius: 3,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
+                    : [], // No shadow when not selected
+              ),
+              child: isSelected
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(25.0),
+                child: BackdropFilter(
+                  // Apply an inner blur to the selected item itself, creating the frosted glass look
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Row(
+                    // Icon and text arranged side-by-side when selected
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min, // Make the Row take minimum horizontal space
+                    children: [
+                      Icon(icon, color: Colors.white, size: 24), // White icon
+                      const SizedBox(width: 8), // Space between icon and text
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white, // White text
+                          fontSize: 14, // Slightly larger font for selected text
+                          fontWeight: FontWeight.bold, // Bold text
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+                  : Column(
+                // Icon and text stacked vertically when not selected
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Make the Column take minimum vertical space
+                children: [
+                  Icon(icon, color: Colors.white.withOpacity(0.6), size: 24), // Subdued icon
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6), // Subdued text
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
