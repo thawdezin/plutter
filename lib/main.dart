@@ -1,234 +1,249 @@
-// pubspec.yaml ထဲမှာ http package ထည့်မယ်
-// dependencies:
-//   flutter:
-//     sdk: flutter
-//   http: ^0.13.5
-
-import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
-/// MyApp: root widget for the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      // Set the home page of the application to ProductListPage.
-      home: ProductListPage(),
+    return MaterialApp(
+      title: 'Glassmorphic Nav Demo',
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
+      ),
+      home: const HomeScreen(),
     );
   }
 }
 
-/// Product model: Represents a single product with its properties.
-class Product {
-  final int id;
-  final String name;
-  final String imageUrl;
-  final bool inStock;
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  Product({
-    required this.id,
-    required this.name,
-    required this.imageUrl,
-    required this.inStock,
-  });
-
-  /// Factory constructor to create a Product object from a JSON map.
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      id: json['id'],
-      name: json['name'],
-      imageUrl: json['imageUrl'],
-      inStock: json['inStock'],
-    );
-  }
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// ProductListPage: A StatefulWidget responsible for displaying a paginated list of products.
-class ProductListPage extends StatefulWidget {
-  const ProductListPage({super.key});
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  static const List<Widget> _pages = <Widget>[
+    Center(child: Text('Calls Page', style: TextStyle(fontSize: 24, color: Colors.black))),
+    Center(child: Text('Contacts Page', style: TextStyle(fontSize: 24, color: Colors.black))),
+    Center(child: Text('Keypad Page', style: TextStyle(fontSize: 24, color: Colors.black))),
+    Center(child: Text('Search Page', style: TextStyle(fontSize: 24, color: Colors.black))),
+  ];
 
-  @override
-  State<ProductListPage> createState() => _ProductListPageState();
-}
-
-/// State class for ProductListPage, handling data fetching and UI updates.
-class _ProductListPageState extends State<ProductListPage> {
-  // ScrollController to detect when the user scrolls to the end of the list.
-  final ScrollController _scrollController = ScrollController();
-
-  List<Product> _products = []; // List to hold fetched products.
-  int _page = 1; // Current page number for pagination.
-  final int _limit = 10; // Number of items to fetch per page.
-  bool _isLoading = false; // Flag to indicate if data is currently being loaded.
-  bool _hasMore = true; // Flag to indicate if there are more pages to load.
-  String? _errorMessage; // Stores any error message that occurs during fetching.
-
-  // The API endpoint for fetching product data.
-  static const String apiUrl = 'https://crawl-scrape-test-website.vercel.app/api_pagi';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchPage(); // Fetch the initial page of products when the widget is initialized.
-    _scrollController.addListener(_onScroll); // Add a listener to detect scroll events.
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose(); // Dispose of the ScrollController to prevent memory leaks.
-    super.dispose();
-  }
-
-  /// Listener for the ScrollController.
-  /// Fetches more data when the user scrolls near the end of the list,
-  /// provided that no loading is in progress and there are more pages available.
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200 && // 200 pixels from the end
-        !_isLoading &&
-        _hasMore) {
-      _fetchPage();
-    }
-  }
-
-  /// Asynchronously fetches a page of product data from the API.
-  Future<void> _fetchPage() async {
-    // If already loading, return immediately to prevent duplicate requests.
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true; // Set loading flag to true.
-      _errorMessage = null; // Clear any previous error messages.
-    });
-
-    // Construct the URI with current page and limit parameters.
-    final uri = Uri.parse(apiUrl).replace(queryParameters: {
-      'page': '$_page',
-      'limit': '$_limit',
-    });
-
-    try {
-      final response = await http.get(uri); // Perform the HTTP GET request.
-
-      if (response.statusCode == 200) {
-        // If the request is successful (status code 200).
-        final jsonBody = json.decode(response.body); // Decode the JSON response body.
-        final List<dynamic> data = jsonBody['data']; // Extract the product data array.
-        // Convert JSON data to a list of Product objects.
-        final fetched = data.map((e) => Product.fromJson(e)).toList();
-
-        setState(() {
-          _page++; // Increment page number for the next fetch.
-          _products.addAll(fetched); // Add newly fetched products to the existing list.
-          // Determine if there are more pages by comparing current page with total pages.
-          _hasMore = _page <= (jsonBody['totalPages'] as int);
-        });
-      } else {
-        // If the response status code is not 200, throw an exception.
-        throw Exception('Failed to load products: HTTP ${response.statusCode}');
-      }
-    } catch (e) {
-      // Catch any errors during the HTTP request or JSON decoding.
-      setState(() {
-        _errorMessage = e.toString(); // Store the error message.
-      });
-    } finally {
-      // This block always executes, regardless of success or failure.
-      setState(() {
-        _isLoading = false; // Set loading flag to false.
-      });
-    }
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Product Pagination')),
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildListView(), // Display the list of products.
-          ),
-          // Show a circular progress indicator at the bottom when loading.
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(),
-            ),
-          // Show an error message if one exists.
-          if (_errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('Error: $_errorMessage',
-                  style: const TextStyle(color: Colors.red)),
-            ),
-        ],
+      extendBody: true,
+      appBar: AppBar(title: const Text('iOS 26 Style Navigation')),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: GlassmorphicBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }
+}
 
-  /// Builds the ListView for displaying products.
-  Widget _buildListView() {
-    return ListView.builder(
-      controller: _scrollController, // Attach the scroll controller.
-      itemCount: _products.length, // Number of items in the list.
-      itemBuilder: (context, index) {
-        final p = _products[index]; // Get the product at the current index.
-        print('Attempting to load image for ${p.name} from URL: ${p.imageUrl}'); // Log the image URL for debugging
+class GlassmorphicBottomNavBar extends StatefulWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemTapped;
 
-        return ListTile(
-          leading: Image.network(
-            p.imageUrl,
-            width: 50,
-            height: 50,
-            fit: BoxFit.cover,
-            // Displays a CircularProgressIndicator while the image is loading.
-            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-              if (loadingProgress == null) {
-                return child; // Image is fully loaded, show the image.
-              }
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null, // Value is null if total bytes are unknown.
-                ),
+  const GlassmorphicBottomNavBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  });
+
+  @override
+  State<GlassmorphicBottomNavBar> createState() =>
+      _GlassmorphicBottomNavBarState();
+}
+
+class _GlassmorphicBottomNavBarState extends State<GlassmorphicBottomNavBar> {
+  double _dragOffset = 0;
+  double _scale = 1;
+  bool _canUpdate = true;
+
+  final List<Map<String, dynamic>> _items = [
+    {'icon': Icons.schedule, 'label': 'Calls'},
+    {'icon': Icons.person, 'label': 'Contacts'},
+    {'icon': Icons.dialpad, 'label': 'Keypad'},
+    {'icon': Icons.search, 'label': 'Search'},
+  ];
+
+  @override
+  void didUpdateWidget(covariant GlassmorphicBottomNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedIndex != widget.selectedIndex) {
+      _dragOffset = 0;
+      _scale = 1;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double totalW = MediaQuery.of(context).size.width - 32;
+    const double hBar = 70, pillH = 80;
+    final double itemW = totalW / _items.length;
+    final double pillW = itemW * 1.2;
+    final double pillX = widget.selectedIndex * itemW + (itemW - pillW)/2 + _dragOffset;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 30),
+      child: GestureDetector(
+        onHorizontalDragStart: (_) => setState(() => _scale = 1.05),
+        onHorizontalDragUpdate: (d) {
+          if (!_canUpdate) return;
+          _canUpdate = false;
+          Future.delayed(const Duration(milliseconds: 16), () {
+            setState(() {
+              _dragOffset = (_dragOffset + d.primaryDelta!).clamp(
+                -widget.selectedIndex * itemW,
+                (_items.length - 1 - widget.selectedIndex) * itemW,
               );
-            },
-            // Displays a broken image icon and "Failed" text if the image fails to load.
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: 50,
-                height: 50,
-                color: Colors.grey[200], // Light grey background for failed image.
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.broken_image,
-                      size: 25, // Icon size.
-                      color: Colors.grey, // Icon color.
+            });
+            _canUpdate = true;
+          });
+        },
+        onHorizontalDragEnd: (e) {
+          final deltaIndex = (_dragOffset / itemW).round();
+          final newIndex = (widget.selectedIndex + deltaIndex)
+              .clamp(0, _items.length - 1);
+          widget.onItemTapped(newIndex);
+          setState(() {
+            _dragOffset = 0;
+            _scale = 1;
+          });
+        },
+        child: SizedBox(
+          height: pillH,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Background bar
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(35),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      height: hBar,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(35),
+                        border: Border.all(color: Colors.black.withOpacity(0.1)),
+                      ),
                     ),
-                    Text(
-                      'Failed', // Text to indicate image loading failed.
-                      style: TextStyle(fontSize: 8, color: Colors.grey),
-                    )
-                  ],
+                  ),
                 ),
-              );
-            },
+              ),
+
+              // Navigation items
+              Positioned.fill(
+                child: Row(
+                  children: List.generate(_items.length, (i) {
+                    final item = _items[i];
+                    final bool selected = i == widget.selectedIndex;
+                    return Expanded(
+                      child: InkWell(
+                        onTap: () => widget.onItemTapped(i),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(item['icon'], size: 24, color: Colors.black.withOpacity(selected ? 0.2 : 0.6)),
+                            const SizedBox(height: 4),
+                            Text(item['label'],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black.withOpacity(selected ? 0.2 : 0.6),
+                                )),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+              // Fast pill indicator
+              RepaintBoundary(
+                child: Transform.translate(
+                  offset: Offset(pillX, 0),
+                  child: Transform.scale(
+                    scale: _scale,
+                    child: _Pill(
+                      icon: _items[widget.selectedIndex]['icon'],
+                      label: _items[widget.selectedIndex]['label'],
+                      width: pillW,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          title: Text(p.name), // Product name.
-          subtitle: Text(p.inStock ? 'In Stock' : 'Out of Stock'), // Stock status.
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final double width;
+  const _Pill({
+    required this.icon,
+    required this.label,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 28, color: Colors.blue),
+                const SizedBox(height: 4),
+                Text(label,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    )),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
